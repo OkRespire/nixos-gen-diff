@@ -124,7 +124,7 @@ fn parse_as_packages(input: &str) -> PackageChange {
     } else {
         Some(fields[1].to_string())
     };
-    let new_ver = if fields[3] == "∅" || fields[3] == "ε" {
+    let new_ver = if fields[3] == "∅," || fields[3] == "ε," {
         None
     } else {
         Some(fields[3].to_string())
