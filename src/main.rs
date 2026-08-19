@@ -22,8 +22,8 @@ struct PackageChange {
 
 #[derive(Debug)]
 struct Size {
-    delta: f64,
-    unit: String,
+    pub delta: f64,
+    pub unit: String,
 }
 
 fn main() {
@@ -85,6 +85,27 @@ fn main() {
         .map(|line| parse_as_packages(line))
         .collect::<Vec<PackageChange>>();
     println!("{:#?}", &pkgs);
+
+    let mut size_diff: f64 = 0.0;
+
+    for x in pkgs {
+        match x.size_delta {
+            Some(sd) => {
+                let mult = match sd.unit.as_str() {
+                    "KiB" => 1024.0,
+                    "MiB" => 1024.0_f64.powi(2),
+                    "GiB" => 1024.0_f64.powi(3),
+                    _ => 1.0,
+                };
+                size_diff += sd.delta * mult;
+            }
+            None => continue,
+        }
+    }
+
+    // let bucket =
+
+    println!("{} Bytes", size_diff.round())
 }
 
 fn parse_as_gen(input: &str) -> Generation {
@@ -105,8 +126,18 @@ fn parse_as_gen(input: &str) -> Generation {
 fn parse_as_packages(input: &str) -> PackageChange {
     let input = strip_str(input);
     let fields: Vec<&str> = input.split_whitespace().collect();
-    let name = fields[0].replace(":", "");
-    if fields.len() == 3 {
+    eprintln!("DEBUG fields: {:?}", fields);
+    let name = fields[0].trim_end_matches(":").to_string();
+    let arrow_loc = fields.iter().position(|f| *f == "→");
+
+    /*/TODO:
+     * Change old_ver and new_ver into Vec<String>. Why? Sometimes there are more than
+     * one old/new versions of the package so using the location of arrow_loc we get the vector
+     * after name until the arrow_loc for the old, and for the new versions, it is after arrow_loc
+     * until the size. So in reality this will look like
+     * name [new_ver1, new_ver2, ... ,new_ver_x] → [new_ver1, new_ver2, ..., new_ver_x] [delta, unit]
+     */
+    let (old_ver, new_ver) = if arrow_loc.is_none() {
         let delta: f64 = fields[1].parse().unwrap();
         let size = Some(Size {
             delta,
@@ -118,24 +149,30 @@ fn parse_as_packages(input: &str) -> PackageChange {
             new_ver: None,
             size_delta: size,
         };
-    }
-    let old_ver = if fields[1] == "∅" || fields[1] == "ε" {
-        None
     } else {
-        Some(fields[1].to_string())
-    };
-    let new_ver = if fields[3] == "∅," || fields[3] == "ε," {
-        None
-    } else {
-        Some(fields[3].to_string())
+        let new_ver_loc = arrow_loc.unwrap() + 1;
+        let old_ver = if fields[1] == "∅" || fields[1] == "ε" {
+            None
+        } else {
+            Some(fields[1].trim_end_matches(",").to_string())
+        };
+        let new_ver = if fields[new_ver_loc].trim_end_matches(",") == "∅"
+            || fields[new_ver_loc].trim_end_matches(",") == "ε"
+        {
+            None
+        } else {
+            Some(fields[new_ver_loc].trim_end_matches(",").to_string())
+        };
+        (old_ver, new_ver)
     };
 
-    let size_delta: Option<Size> = if fields.len() == 6 {
-        eprintln!("DEBUG fields: {:?}", fields);
-        let delta: f64 = fields[4].parse().unwrap();
+    let size_delta: Option<Size> = if fields.len() >= 6 {
+        let n = fields.len();
+        let unit_loc = n - 1;
+        let delta: f64 = fields[unit_loc - 1].parse().unwrap();
         Some(Size {
             delta: delta,
-            unit: fields[5].to_string(),
+            unit: fields[unit_loc].to_string(),
         })
     } else {
         None
