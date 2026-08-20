@@ -22,6 +22,11 @@ fn main() {
     println!("Choose another generation number:");
     let new_num = read_generation_number();
 
+    let (old_num, new_num) = if old_num > new_num {
+        (new_num, old_num)
+    } else {
+        (old_num, new_num)
+    };
     let old = generations
         .iter()
         .find(|g| g.number == old_num)
