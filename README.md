@@ -78,8 +78,8 @@ after a rebuild and I wanted to make a clearer way of reading these packages,
 so this project was born.
 
 ## What's next?
-- [ ] Better error handling
+- [x] Better error handling
  - Currently the error handling is a bit... rudimentary.
-- [ ] Interactive TUI
+- [x] Interactive TUI
 - [ ] Potentially a better way of collecting generations and diffs without shell commands
 

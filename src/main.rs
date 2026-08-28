@@ -1,15 +1,11 @@
-use std::io;
+use std::time::Duration;
 
-use anyhow::{Context, Result};
-use crossterm::event::{self, Event, KeyEventKind};
+use anyhow::Result;
+use crossterm::event;
 
 use crate::{
-    model::PackageChanges,
-    nix::generation::{diff_generations, list_generations},
-    ui::{
-        app::{DiffApp, Screen},
-        render, terminal,
-    },
+    nix::generation::list_generations,
+    ui::{DiffApp, Screen, app::advance, draw_ui, handle_events},
 };
 
 mod model;
@@ -27,59 +23,20 @@ fn main() -> Result<()> {
         },
         should_quit: false,
     };
-    terminal::setup(|terminal| {
+    ratatui::run(|terminal| {
         loop {
-            terminal.draw(|f| render::draw_ui(f, &app))?;
-            if let Event::Key(key_event) = event::read()? {
-                if key_event.kind == KeyEventKind::Press {
-                    ui::event::handle_keys(&mut app, key_event.code)
-                }
+            terminal.draw(|f| draw_ui(f, &app))?;
+
+            advance(&mut app)?;
+            if event::poll(Duration::from_millis(50))? {
+                let event = event::read()?;
+                handle_events(&mut app, event)?;
             }
             if app.should_quit {
-                break Ok(());
+                break anyhow::Ok(());
             }
         }
     })?;
-    // for generation in &generations {
-    //     println!(
-    //         "gen no: {} build date: {}",
-    //         generation.number, generation.build_date
-    //     );
-    // }
-    // println!("Choose a generation number:");
-    // let old_num = read_generation_number()?;
-    //
-    // println!("Choose another generation number:");
-    // let new_num = read_generation_number()?;
-    //
-    // let (old_num, new_num) = if old_num > new_num {
-    //     (new_num, old_num)
-    // } else {
-    //     (old_num, new_num)
-    // };
-    //
-    // let old = generations
-    //     .iter()
-    //     .find(|g| g.number == old_num)
-    //     .expect("Generation not found");
-    //
-    // let new = generations
-    //     .iter()
-    //     .find(|g| g.number == new_num)
-    //     .expect("Generation not found");
-    //
-    // let pkgs = diff_generations(old, new)?;
-    // // eprintln!("{:#?}", &pkgs);
-    //
-    // let changes = PackageChanges::from_packages(pkgs);
-    // println!("{}", changes);
     Ok(())
 }
 
-fn read_generation_number() -> Result<u32> {
-    let mut buf = String::new();
-    io::stdin()
-        .read_line(&mut buf)
-        .context("Cannot read the stdio into the buffer")?;
-    buf.trim().parse().context("Cannot parse buffer into u32")
-}
