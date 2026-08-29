@@ -17,7 +17,7 @@ fn main() -> Result<()> {
 
     let mut app = DiffApp {
         screen: Screen::SelectGenerations {
-            generations: generations,
+            generations,
             cursor: 0,
             picked: Vec::new(),
         },
@@ -30,7 +30,7 @@ fn main() -> Result<()> {
             advance(&mut app)?;
             if event::poll(Duration::from_millis(50))? {
                 let event = event::read()?;
-                handle_events(&mut app, event)?;
+                handle_events(&mut app, &event);
             }
             if app.should_quit {
                 break anyhow::Ok(());
@@ -39,4 +39,3 @@ fn main() -> Result<()> {
     })?;
     Ok(())
 }
-

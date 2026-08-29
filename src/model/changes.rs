@@ -64,7 +64,7 @@ impl Display for PackageChanges {
 
 fn print_vec(f: &mut std::fmt::Formatter<'_>, vec: &[PackageChange]) -> std::fmt::Result {
     for v in vec {
-        writeln!(f, "{}", v)?
+        writeln!(f, "{v}")?;
     }
     writeln!(f, "\n")?;
     Ok(())

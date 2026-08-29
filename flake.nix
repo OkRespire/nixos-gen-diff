@@ -36,10 +36,14 @@
           strictDeps = true;
           nativeBuildInputs = with pkgs; [
             pkg-config
+            autoPatchelfHook
             mold
             makeWrapper
           ];
-          RUSTFLAGS = "-C link-arg=-fuse-ld=${pkgs.mold}/bin/mold";
+          buildInputs = [
+            pkgs.stdenv.cc.cc.lib
+          ];
+          RUSTFLAGS = "-C link-arg=-fuse-ld=mold -C link-arg=-B${pkgs.mold}/bin";
         };
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         nixos-gen-diff = craneLib.buildPackage (

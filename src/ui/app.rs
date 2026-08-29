@@ -1,9 +1,6 @@
 use std::sync::mpsc;
 
-use crate::{
-    model::{Generation, PackageChange, PackageChanges},
-    nix::generation::diff_generations,
-};
+use crate::model::{Generation, PackageChange, PackageChanges};
 use anyhow::Result;
 
 pub struct DiffApp {

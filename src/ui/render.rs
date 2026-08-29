@@ -20,7 +20,7 @@ pub fn draw_ui(f: &mut Frame<'_>, app: &DiffApp) {
             generations,
             cursor,
             picked,
-        } => render_gens_screen(f, generations, cursor, picked),
+        } => render_gens_screen(f, generations, *cursor, picked),
         Screen::Diffing { old, new, .. } => {
             render_diff_screen(f, old, new);
         }
@@ -29,23 +29,23 @@ pub fn draw_ui(f: &mut Frame<'_>, app: &DiffApp) {
             active_tab,
             cursor,
         } => {
-            render_res_screen(f, changes, active_tab, cursor);
+            render_res_screen(f, changes, *active_tab, *cursor);
         }
     }
 }
 
 fn render_gens_screen(
     f: &mut Frame<'_>,
-    gens: &Vec<Generation>,
-    cursor: &usize,
-    picked: &Vec<Generation>,
+    gens: &[Generation],
+    cursor: usize,
+    picked: &[Generation],
 ) {
     let items: Vec<ListItem> = gens
-        .into_iter()
+        .iter()
         .map(|s| -> ListItem<'_> {
             let line = format!("Number: {} \t Build Date: {}", s.number, s.build_date);
 
-            if picked.contains(&s) {
+            if picked.contains(s) {
                 ListItem::new(line).style(Style::default().fg(Color::White).bg(Color::Green))
             } else {
                 ListItem::new(line)
@@ -55,7 +55,7 @@ fn render_gens_screen(
 
     let list = List::new(items).highlight_style(Style::default().reversed());
 
-    let mut list_state = ListState::default().with_selected(Some(*cursor));
+    let mut list_state = ListState::default().with_selected(Some(cursor));
 
     f.render_stateful_widget(list, f.area(), &mut list_state);
 }
@@ -73,8 +73,8 @@ fn render_diff_screen(f: &mut Frame<'_>, old: &Generation, new: &Generation) {
 fn render_res_screen(
     f: &mut Frame<'_>,
     changes: &PackageChanges,
-    active_tab: &usize,
-    cursor: &usize,
+    active_tab: usize,
+    cursor: usize,
 ) {
     let layout = Layout::vertical([Constraint::Length(1), Constraint::Fill(1)]).spacing(1);
     let [top, main] = f.area().layout(&layout);
@@ -82,7 +82,7 @@ fn render_res_screen(
     let tabs = Tabs::new(CATEGORIES)
         .style(Color::White)
         .highlight_style(Style::default().magenta().on_black().bold())
-        .select(*active_tab)
+        .select(active_tab)
         .divider(symbols::DOT)
         .padding(" ", " ");
 
@@ -97,7 +97,7 @@ fn render_res_screen(
     }
     .highlight_style(Style::default().reversed());
 
-    let mut list_state = ListState::default().with_selected(Some(*cursor));
+    let mut list_state = ListState::default().with_selected(Some(cursor));
     f.render_widget(tabs, top);
     f.render_stateful_widget(text, main, &mut list_state);
 }

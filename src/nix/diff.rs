@@ -7,11 +7,11 @@ pub fn parse_packages(input: &str) -> Result<PackageChange> {
     let input = strip_str(input);
     let fields: Vec<&str> = input
         .split_whitespace()
-        .map(|s| s.trim_end_matches(","))
+        .map(|s| s.trim_end_matches(','))
         .collect();
 
     // eprintln!("DEBUG fields: {:?}", fields);
-    let name = fields[0].trim_end_matches(":").to_string();
+    let name = fields[0].trim_end_matches(':').to_string();
     let Some(arrow_idx) = fields.iter().position(|f| *f == "→") else {
         let delta: f64 = fields[1]
             .parse()
@@ -38,7 +38,7 @@ pub fn parse_packages(input: &str) -> Result<PackageChange> {
                 delta,
                 unit: fields[delta_idx + 1].to_string(),
             });
-            new_end = delta_idx
+            new_end = delta_idx;
         }
     }
 

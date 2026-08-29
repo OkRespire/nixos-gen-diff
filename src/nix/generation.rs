@@ -18,7 +18,7 @@ pub fn list_generations() -> Result<Vec<Generation>> {
 }
 fn parse_generation(input: &str) -> Result<Generation> {
     let fields: Vec<&str> = input.split_whitespace().collect();
-    let is_curr = if fields[7] == "True" { true } else { false };
+    let is_curr = fields[7] == "True";
     let link = std::fs::read_link(format!("/nix/var/nix/profiles/system-{}-link", fields[0]))
         .context("Link not found")?;
     let number = fields[0].parse().context("Not a number.")?;

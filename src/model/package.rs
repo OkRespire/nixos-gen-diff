@@ -84,13 +84,13 @@ impl Display for PackageChange {
         if self.old_ver.is_empty() && self.new_ver.is_empty() {
             write!(f, ": ")?;
         }
-        if let Some(sd) = &self.size_delta {
-            if sd.delta != 0.0 {
-                if self.old_ver.is_empty() && self.new_ver.is_empty() {
-                    write!(f, "{}", sd)?;
-                } else {
-                    write!(f, ", {}", sd)?;
-                }
+        if let Some(sd) = &self.size_delta
+            && sd.delta != 0.0
+        {
+            if self.old_ver.is_empty() && self.new_ver.is_empty() {
+                write!(f, "{sd}")?;
+            } else {
+                write!(f, ", {sd}")?;
             }
         }
         Ok(())
@@ -106,7 +106,7 @@ impl Default for Size {
     fn default() -> Self {
         Size {
             delta: 0.0,
-            unit: "".to_string(),
+            unit: String::new(),
         }
     }
 }
