@@ -3,6 +3,15 @@ use strip_ansi_escapes::strip_str;
 
 use crate::model::{PackageChange, Size};
 
+/// Parses a line from the nix store diff-closures and turns it into a PackageChange type.
+/// The lines can be:
+/// name: old_pkg_ver → new_pkg_ver, +/- size Unit (B, KiB, GiB, etc)
+/// name: old_pkg_ver2, old_pkg_ver2 → new_pkg_ver1, new_pkg_ver2, +/- Size Unit (B, KiB, GiB, etc)
+/// name: new_pkg_ver1, +/- Size Unit (B, KiB, GiB, etc)
+/// name: +/- Size Unit (B, KiB, GiB, etc)
+/// extra.targets: ε → ∅
+/// name:
+/// There may be more that is missing but these are the ones that I have noticed
 pub fn parse_packages(input: &str) -> Result<PackageChange> {
     let input = strip_str(input);
     let fields: Vec<&str> = input
@@ -66,4 +75,55 @@ pub fn parse_packages(input: &str) -> Result<PackageChange> {
         new_ver,
         size_delta,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_no_arrow_rebuild_only() -> Result<()> {
+        let result = parse_packages("7zz: 2.8 MiB")?;
+        assert_eq!(result.pkg_name, "7zz");
+        assert!(result.old_ver.is_empty());
+        assert!(result.new_ver.is_empty());
+        let size = result.size_delta.expect("expected a size delta");
+        assert_eq!(size.delta, 2.8);
+        assert_eq!(size.unit, "MiB");
+        Ok(())
+    }
+
+    #[test]
+    fn parses_single_version_both_sides_with_size() -> Result<()> {
+        let result = parse_packages("thing: 0.1 → 0.2, 245.0 KiB")?;
+        assert_eq!(result.pkg_name, "thing");
+        assert_eq!(result.old_ver, vec!["0.1"]);
+        assert_eq!(result.new_ver, vec!["0.2"]);
+        let size = result.size_delta.expect("expected a size delta");
+        assert_eq!(size.delta, 245.0);
+        assert_eq!(size.unit, "KiB");
+        Ok(())
+    }
+
+    #[test]
+    fn parses_multi_version_both_sides_with_size() -> Result<()> {
+        let result = parse_packages("bottles: 65.4, 65.4-fhsenv → 64.1, 64.1-fhsenv, -188.0 KiB")?;
+        assert_eq!(result.pkg_name, "bottles");
+        assert_eq!(result.old_ver, vec!["65.4", "65.4-fhsenv"]);
+        assert_eq!(result.new_ver, vec!["64.1", "64.1-fhsenv"]);
+        let size = result.size_delta.expect("expected a size delta");
+        assert_eq!(size.delta, -188.0);
+        assert_eq!(size.unit, "KiB");
+        Ok(())
+    }
+
+    #[test]
+    fn parses_epsilon_and_empty_set_placeholders_as_empty() -> Result<()> {
+        let result = parse_packages("extra.targets: ε → ∅")?;
+        assert_eq!(result.pkg_name, "extra.targets");
+        assert!(result.old_ver.is_empty());
+        assert!(result.new_ver.is_empty());
+        assert!(result.size_delta.is_none());
+        Ok(())
+    }
 }

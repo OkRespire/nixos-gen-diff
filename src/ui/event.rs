@@ -41,7 +41,12 @@ pub fn handle_key(app: &mut DiffApp, key: KeyCode) {
                         let result = diff_generations(&thread_old, &thread_new);
                         let _ = tx.send(result);
                     });
-                    app.screen = Screen::Diffing { old, new, rx }
+                    app.screen = Screen::Diffing {
+                        old,
+                        new,
+                        rx,
+                        spin_idx: 0,
+                    }
                 }
             }
             KeyCode::Esc => app.should_quit = true,
@@ -62,8 +67,14 @@ pub fn handle_key(app: &mut DiffApp, key: KeyCode) {
                 _ => unreachable!(),
             };
             match key {
-                KeyCode::Tab => *active_tab = (*active_tab + 1).min(CATEGORIES.len() - 1),
-                KeyCode::BackTab => *active_tab = active_tab.saturating_sub(1),
+                KeyCode::Tab => {
+                    *active_tab = (*active_tab + 1).min(CATEGORIES.len() - 1);
+                    *cursor = 0;
+                }
+                KeyCode::BackTab => {
+                    *active_tab = active_tab.saturating_sub(1);
+                    *cursor = 0;
+                }
                 KeyCode::Esc => app.should_quit = true,
                 KeyCode::Char('0') => {
                     *active_tab = 0;

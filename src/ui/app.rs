@@ -18,6 +18,7 @@ pub enum Screen {
         old: Generation,
         new: Generation,
         rx: mpsc::Receiver<Result<Vec<PackageChange>>>,
+        spin_idx: usize,
     },
     Results {
         changes: PackageChanges,
@@ -27,7 +28,8 @@ pub enum Screen {
 }
 
 pub fn advance(app: &mut DiffApp) -> Result<()> {
-    if let Screen::Diffing { rx, .. } = &app.screen {
+    if let Screen::Diffing { rx, spin_idx, .. } = &mut app.screen {
+        *spin_idx = *spin_idx + 1;
         match rx.try_recv() {
             Ok(Ok(pkgs)) => {
                 let changes = PackageChanges::from_packages(pkgs);

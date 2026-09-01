@@ -1,7 +1,7 @@
 # NixOS Generation Diff
 
-A Rust CLI tool for comparing NixOS system generations and presenting
-package changes in a cleaner, categorised format.
+A Rust TUI tool for comparing NixOS system generations and presenting
+package changes in a cleaner, categorised format built on ratatui.
 
 ## Overview
 
@@ -19,7 +19,6 @@ selected generations and then categorises those changes into:
 - Rebuilt packages
 - Other changes
 
-Currently this is a CLI, however TUI is going to be developed soon!
 
 ## Features
 
@@ -33,35 +32,7 @@ Currently this is a CLI, however TUI is going to be developed soon!
 - Group changes into categories
 
 ## Example
-
-```text
-gen no: 120 build date: 2026-08-10 12:32:10
-gen no: 121 build date: 2026-08-12 18:21:43
-gen no: 122 build date: 2026-08-18 14:04:12
-
-Choose a generation number:
-120
-
-Choose another generation number:
-122
-
---- Package Update Summary ---
-[Kernel Updates]
-linux: 6.15.8 -> 6.15.9
-
-[Updated Packages]
-firefox: 140.0 -> 141.0, 82.4 MiB
-gcc: 14.2.1 -> 14.2.2, 12.1 MiB
-
-[Added Packages]
-...
-
-[Removed Packages]
-...
-
-[Rebuilt Packages]
-...
-```
+![Demo of nixos-gen-diff](./assets/demo.gif)
 
 ## Requirements
 - Rust
@@ -70,6 +41,15 @@ gcc: 14.2.1 -> 14.2.2, 12.1 MiB
 - nix
 
 This program expects all your profiles to be located at `/nix/var/nix/profiles/`
+
+## Installation
+Not yet published to a registry, so for now, run it directly from the flake:
+```bash
+$ nix run github:OkRespire/nixos-gen-diff
+```
+If you want to hack on the code instead, clone the repo and use the dev shell
+(via `direnv allow`, or manually with `nix develop`) to get `cargo` and the
+rest of the toolchain available.
 
 
 ## Why?
