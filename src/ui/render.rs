@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
@@ -13,6 +15,29 @@ use crate::{
         app::{DiffApp, Screen},
     },
 };
+
+enum Tab {
+    Kernel,
+    Updated,
+    Removed,
+    Added,
+    Rebuilt,
+    Other,
+}
+
+impl Display for Tab {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Tab::Kernel => write!(f, "Kernel"),
+            Tab::Updated => write!(f, "Updated"),
+            Tab::Removed => write!(f, "Removed"),
+            Tab::Added => write!(f, "Added"),
+            Tab::Rebuilt => write!(f, "Rebuilt"),
+            Tab::Other => write!(f, "Other"),
+        }
+    }
+}
+
 const SPINNER_FRAMES: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 pub fn draw_ui(f: &mut Frame<'_>, app: &DiffApp) {
@@ -94,12 +119,12 @@ fn render_res_screen(
         .padding(" ", " ");
 
     let text = match active_tab {
-        0 => format_package_list(&changes.kernel),
-        1 => format_package_list(&changes.updated),
-        2 => format_package_list(&changes.removed),
-        3 => format_package_list(&changes.added),
-        4 => format_package_list(&changes.rebuilt),
-        5 => format_package_list(&changes.other),
+        0 => format_package_list(&changes.kernel, Tab::Kernel),
+        1 => format_package_list(&changes.updated, Tab::Updated),
+        2 => format_package_list(&changes.removed, Tab::Removed),
+        3 => format_package_list(&changes.added, Tab::Added),
+        4 => format_package_list(&changes.rebuilt, Tab::Rebuilt),
+        5 => format_package_list(&changes.other, Tab::Other),
         _ => unreachable!(),
     }
     .highlight_style(Style::default().reversed());
@@ -109,11 +134,14 @@ fn render_res_screen(
     f.render_stateful_widget(text, main, &mut list_state);
 }
 
-fn format_package_list(list: &[PackageChange]) -> List<'_> {
-    let thing: Vec<ListItem> = list
-        .iter()
-        .map(|p| -> ListItem<'_> { ListItem::new(p.to_string()) })
-        .collect();
+fn format_package_list(list: &[PackageChange], tab: Tab) -> List<'_> {
+    let thing: Vec<ListItem> = if list.is_empty() {
+        vec![ListItem::new(format!("No diff in {} found", tab))]
+    } else {
+        list.iter()
+            .map(|p| -> ListItem<'_> { ListItem::new(p.to_string()) })
+            .collect()
+    };
 
     List::new(thing)
 }
