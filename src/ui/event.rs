@@ -1,6 +1,6 @@
 use std::{sync::mpsc, thread};
 
-use crossterm::event::{Event, KeyCode, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::{
     nix::generation::diff_generations,
@@ -9,13 +9,13 @@ use crate::{
     },
 };
 
-pub fn handle_key(app: &mut DiffApp, key: KeyCode) {
+pub fn handle_key(app: &mut DiffApp, key: &KeyEvent) {
     match &mut app.screen {
         Screen::SelectGenerations {
             generations,
             cursor,
             picked,
-        } => match key {
+        } => match key.code {
             KeyCode::Down | KeyCode::Char('j') => {
                 *cursor = (*cursor + 1).min(generations.len() - 1);
             }
@@ -66,7 +66,7 @@ pub fn handle_key(app: &mut DiffApp, key: KeyCode) {
                 5 => changes.other.len(),
                 _ => unreachable!(),
             };
-            match key {
+            match key.code {
                 KeyCode::Tab => {
                     *active_tab = (*active_tab + 1).min(CATEGORIES.len() - 1);
                     *cursor = 0;
@@ -105,6 +105,12 @@ pub fn handle_key(app: &mut DiffApp, key: KeyCode) {
                     *cursor = (*cursor + 1).min(length - 1);
                 }
                 KeyCode::Up | KeyCode::Char('k') => *cursor = cursor.saturating_sub(1),
+                KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    *cursor = (*cursor + 5).min(length - 1);
+                }
+                KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    *cursor = cursor.saturating_sub(5)
+                }
                 _ => {}
             }
         }
@@ -117,6 +123,6 @@ pub fn handle_events(app: &mut DiffApp, evt: &Event) {
     if let Event::Key(key_event) = evt
         && key_event.kind == KeyEventKind::Press
     {
-        handle_key(app, key_event.code);
+        handle_key(app, key_event);
     }
 }

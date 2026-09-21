@@ -161,7 +161,7 @@ fn render_footer(f: &mut Frame<'_>, area: ratatui::layout::Rect, screen: &Screen
         }
         Screen::Results { .. } => Some(Tabs::new([
             "Switch: (Tab/Shift-Tab/0-5)",
-            "Move: (↑/↓/j/k)",
+            "Move: (↑/↓/j/k/<C-d>/<C-u>)",
             "Quit: (Esc)",
         ])),
     };
